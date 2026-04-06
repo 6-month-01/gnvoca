@@ -27,31 +27,51 @@ function App() {
   useEffect(() => {
     // Automatically load data.csv if words are empty
     if (state.allWords.length === 0) {
-        fetch('/data.csv')
-        .then((res) => res.text())
+        const baseUrl = import.meta.env.BASE_URL || '/';
+        const csvPath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}data.csv`;
+        
+        console.log('Fetching CSV from:', csvPath);
+        
+        fetch(csvPath)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          return res.text();
+        })
         .then((text) => {
+          console.log('CSV text preview:', text.substring(0, 100));
           Papa.parse(text, {
             header: false,
             skipEmptyLines: true,
             complete: (results) => {
+              console.log('Parsed rows count:', results.data.length);
               const parsedWords: Word[] = results.data
-                .map((row: any) => {
+                .map((row: any, index: number) => {
+                  if (!row || row.length < 3) {
+                    if (index < 3) console.warn(`Row ${index} is invalid:`, row);
+                    return null;
+                  }
                   if (!row[0] || !row[1] || !row[2]) return null;
-                  if (row[0].trim().toLowerCase() === 'day') return null; // Skip header if present
+                  const day = String(row[0]).trim();
+                  const english = String(row[1]).trim();
+                  const korean = String(row[2]).trim();
+                  
+                  if (day.toLowerCase() === 'day') return null; // Skip header
+                  
                   return {
-                    id: `${row[0]}_${row[1]}`.replace(/\s+/g, ''),
-                    day: row[0].trim(),
-                    english: row[1].trim(),
-                    korean: row[2].trim(),
+                    id: `${day}_${english}`.replace(/\s+/g, ''),
+                    day,
+                    english,
+                    korean,
                   };
                 })
                 .filter((w): w is Word => w !== null);
 
+              console.log('Final valid words count:', parsedWords.length);
               if (parsedWords.length > 0) {
                 setAllWords(parsedWords);
                 setCurrentScreen('daySelector');
               } else {
-                console.error('No valid words found in CSV.');
+                console.error('No valid words found in CSV. Content might be wrong.');
               }
             },
           });
