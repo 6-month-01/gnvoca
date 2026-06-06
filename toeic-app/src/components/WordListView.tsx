@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ArrowLeft, Volume2, Eye, EyeOff, Search, Shuffle, Check, HelpCircle, BookOpen } from 'lucide-react';
+import { ArrowLeft, Volume2, EyeOff, Search, Shuffle, Check, HelpCircle, BookOpen } from 'lucide-react';
 import type { Word } from '../types';
 
 interface WordListViewProps {
