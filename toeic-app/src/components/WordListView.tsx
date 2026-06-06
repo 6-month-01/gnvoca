@@ -115,9 +115,17 @@ export function WordListView({
       const voices = window.speechSynthesis.getVoices();
       const enVoices = voices.filter(v => v.lang.toLowerCase().startsWith('en-'));
       
+      // Filter out known creepy/novelty/unnatural voices in macOS/Windows
+      const creepyVoices = ['whisper', 'zarvox', 'trinoids', 'superstar', 'jester', 'organ', 'albert', 'deranged', 'hysterical', 'bad news', 'bells', 'boing', 'bubbles', 'cellos', 'pipe organ', 'grandpa', 'grandma'];
+      const cleanEnVoices = enVoices.filter(v => 
+        !creepyVoices.some(creepy => v.name.toLowerCase().includes(creepy))
+      );
+      
       // Sort to prioritize natural/premium/popular voices
-      const bestVoice = enVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')) ||
-                        enVoices.find(v => v.name.includes('Samantha') || v.name.includes('Apple') || v.name.includes('Microsoft') || v.name.includes('Daniel')) ||
+      const bestVoice = cleanEnVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')) ||
+                        cleanEnVoices.find(v => v.name.includes('Samantha') || v.name.includes('Apple') || v.name.includes('Ava') || v.name.includes('Zoe') || v.name.includes('Daniel') || v.name.includes('Microsoft')) ||
+                        cleanEnVoices.find(v => v.name.includes('Kathy') || v.name.includes('Karen') || v.name.includes('Ralph')) ||
+                        cleanEnVoices[0] ||
                         enVoices[0];
       
       if (bestVoice) {
