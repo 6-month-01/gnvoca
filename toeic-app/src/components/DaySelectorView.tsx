@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Play, Check, X, CheckSquare, Square } from 'lucide-react';
+import { Play, Check, X, CheckSquare, Square, BookOpen } from 'lucide-react';
 import type { Word } from '../types';
 
 interface DaySelectorViewProps {
@@ -7,6 +7,7 @@ interface DaySelectorViewProps {
   selectedDays: string[];
   onChangeSelectedDays: (days: string[]) => void;
   onStartStudy: () => void;
+  onStartWordList: () => void;
   onClearData: () => void;
 }
 
@@ -15,6 +16,7 @@ export function DaySelectorView({
   selectedDays,
   onChangeSelectedDays,
   onStartStudy,
+  onStartWordList,
   onClearData,
 }: DaySelectorViewProps) {
   
@@ -120,19 +122,33 @@ export function DaySelectorView({
         })}
       </div>
 
-      <div className="fixed bottom-8 left-0 right-0 flex justify-center z-10 pointer-events-none px-6">
+      <div className="fixed bottom-8 left-0 right-0 flex justify-center z-10 pointer-events-none px-6 gap-4">
         <button
-          onClick={onStartStudy}
+          onClick={onStartWordList}
           disabled={selectedDays.length === 0}
           className={`
-            pointer-events-auto flex items-center gap-3 px-10 py-4 rounded-full text-lg font-semibold tracking-tight transition-all duration-300
+            pointer-events-auto flex items-center gap-2.5 px-6 py-4 rounded-full text-base font-semibold tracking-tight transition-all duration-300
             ${selectedDays.length > 0
-              ? 'bg-blue-600 text-white shadow-2xl shadow-blue-500/40 hover:bg-blue-700 hover:-translate-y-1'
+              ? 'bg-white text-gray-800 border border-gray-200 shadow-xl shadow-gray-150/40 hover:bg-gray-50 hover:-translate-y-0.5'
               : 'bg-white/90 backdrop-blur-md border border-gray-200 text-gray-400 shadow-lg cursor-not-allowed'
             }
           `}
         >
-          학습 시작 <Play fill="currentColor" size={20} />
+          <BookOpen size={18} className={selectedDays.length > 0 ? "text-blue-500" : ""} />
+          그냥 단어장 보기
+        </button>
+        <button
+          onClick={onStartStudy}
+          disabled={selectedDays.length === 0}
+          className={`
+            pointer-events-auto flex items-center gap-2.5 px-8 py-4 rounded-full text-base font-semibold tracking-tight transition-all duration-300
+            ${selectedDays.length > 0
+              ? 'bg-blue-600 text-white shadow-2xl shadow-blue-500/40 hover:bg-blue-700 hover:-translate-y-0.5'
+              : 'bg-white/90 backdrop-blur-md border border-gray-200 text-gray-400 shadow-lg cursor-not-allowed'
+            }
+          `}
+        >
+          학습 시작 (퀴즈) <Play fill="currentColor" size={16} />
         </button>
       </div>
     </div>

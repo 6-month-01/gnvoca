@@ -5,10 +5,11 @@ import { useStudySession } from './hooks/useStudySession';
 import { DaySelectorView } from './components/DaySelectorView';
 import { StudyView } from './components/StudyView';
 import { KnownWordsView } from './components/KnownWordsView';
+import { WordListView } from './components/WordListView';
 import { BookOpen } from 'lucide-react';
 import type { Word } from './types';
 
-type Screen = 'loading' | 'daySelector' | 'study' | 'knownWords';
+type Screen = 'loading' | 'daySelector' | 'study' | 'knownWords' | 'wordList';
 
 function App() {
   const {
@@ -44,6 +45,7 @@ function App() {
             skipEmptyLines: true,
             complete: (results) => {
               console.log('Parsed rows count:', results.data.length);
+              const seenIds = new Set<string>();
               const parsedWords: Word[] = results.data
                 .map((row: any, index: number) => {
                   if (!row || row.length < 3) {
@@ -57,8 +59,17 @@ function App() {
                   
                   if (day.toLowerCase() === 'day') return null; // Skip header
                   
+                  const baseId = `${day}_${english}`.replace(/\s+/g, '');
+                  let finalId = baseId;
+                  let counter = 1;
+                  while (seenIds.has(finalId)) {
+                    counter++;
+                    finalId = `${baseId}_${counter}`;
+                  }
+                  seenIds.add(finalId);
+                  
                   return {
-                    id: `${day}_${english}`.replace(/\s+/g, ''),
+                    id: finalId,
                     day,
                     english,
                     korean,
@@ -102,7 +113,7 @@ function App() {
     <div className="min-h-screen font-sans selection:bg-blue-200 selection:text-blue-900 flex flex-col bg-gray-50/50">
       
       {/* Global Navigation Bar */}
-      {state.allWords.length > 0 && currentScreen !== 'study' && (
+      {state.allWords.length > 0 && currentScreen !== 'study' && currentScreen !== 'wordList' && (
         <header className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-[0_4px_30px_rgba(0,0,0,0.02)] z-20 animate-in slide-in-from-top-4 duration-500">
           <div className="max-w-4xl mx-auto px-6 h-full flex items-center justify-between">
             <div 
@@ -138,7 +149,7 @@ function App() {
       )}
 
       {/* Main Content Area */}
-      <main className={`flex-1 ${state.allWords.length > 0 && currentScreen !== 'study' ? 'pt-16' : ''}`}>
+      <main className={`flex-1 ${state.allWords.length > 0 && currentScreen !== 'study' && currentScreen !== 'wordList' ? 'pt-16' : ''}`}>
         {currentScreen === 'loading' && (
           <div className="flex items-center justify-center min-h-[70vh]">
             <div className="text-gray-400 font-medium animate-pulse">데이터를 불러오는 중입니다...</div>
@@ -151,6 +162,7 @@ function App() {
             selectedDays={state.selectedDays}
             onChangeSelectedDays={setSelectedDays}
             onStartStudy={() => setCurrentScreen('study')}
+            onStartWordList={() => setCurrentScreen('wordList')}
             onClearData={handleClearData}
           />
         )}
@@ -168,6 +180,17 @@ function App() {
           <KnownWordsView
             knownWordIds={state.knownWordIds}
             allWords={state.allWords}
+            onRemoveKnownWord={removeKnownWord}
+            onBack={() => setCurrentScreen('daySelector')}
+          />
+        )}
+
+        {currentScreen === 'wordList' && (
+          <WordListView
+            allWords={state.allWords}
+            selectedDays={state.selectedDays}
+            knownWordIds={state.knownWordIds}
+            onAddKnownWord={addKnownWord}
             onRemoveKnownWord={removeKnownWord}
             onBack={() => setCurrentScreen('daySelector')}
           />
