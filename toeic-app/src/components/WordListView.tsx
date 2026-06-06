@@ -367,9 +367,9 @@ export function WordListView({
       </div>
 
       {/* Control Bar: Search + Hide Modes */}
-      <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.015)] mb-8 flex flex-col md:flex-row items-center gap-4 justify-between">
+      <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.015)] mb-8 flex flex-col lg:flex-row items-center gap-4 justify-between">
         {/* Search */}
-        <div className="relative w-full md:max-w-xs">
+        <div className="relative w-full lg:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
@@ -390,12 +390,12 @@ export function WordListView({
         
         {/* Voice Selector */}
         {availableVoices.length > 0 && (
-          <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
             <span className="text-xs font-semibold text-gray-400 whitespace-nowrap">발음 목소리:</span>
             <select
               value={selectedVoiceName}
               onChange={(e) => handleVoiceChange(e.target.value)}
-              className="text-xs sm:text-sm bg-gray-50 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors w-full md:w-48 cursor-pointer font-medium"
+              className="text-xs sm:text-sm bg-gray-50 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors w-full lg:w-48 cursor-pointer font-medium"
             >
               <option value="">기본 목소리 (자동)</option>
               {availableVoices.map((v) => (
@@ -408,13 +408,13 @@ export function WordListView({
         )}
 
         {/* Hide Mode Segmented Controls */}
-        <div className="flex bg-gray-100/80 p-1 rounded-xl w-full md:w-auto">
+        <div className="flex bg-gray-100/80 p-1 rounded-xl w-full lg:w-auto flex-shrink-0">
           <button
             onClick={() => {
               setHideMode('none');
               setIndividualReveals({});
             }}
-            className={`flex-1 md:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 lg:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
               hideMode === 'none' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
@@ -425,7 +425,7 @@ export function WordListView({
               setHideMode('english');
               setIndividualReveals({});
             }}
-            className={`flex-1 md:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 lg:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
               hideMode === 'english' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
@@ -436,7 +436,7 @@ export function WordListView({
               setHideMode('korean');
               setIndividualReveals({});
             }}
-            className={`flex-1 md:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`flex-1 lg:flex-none text-center px-4 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer ${
               hideMode === 'korean' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
