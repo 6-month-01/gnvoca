@@ -110,8 +110,25 @@ export function WordListView({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.9; // Slightly slower for better learning
+      
+      // Select best voice (English)
+      const voices = window.speechSynthesis.getVoices();
+      const enVoices = voices.filter(v => v.lang.toLowerCase().startsWith('en-'));
+      
+      // Sort to prioritize natural/premium/popular voices
+      const bestVoice = enVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')) ||
+                        enVoices.find(v => v.name.includes('Samantha') || v.name.includes('Apple') || v.name.includes('Microsoft') || v.name.includes('Daniel')) ||
+                        enVoices[0];
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang;
+      } else {
+        utterance.lang = 'en-US';
+      }
+      
+      utterance.rate = 1.0; // Reset rate to 1.0 (normal speed) to prevent creepy slow voice
+      utterance.pitch = 1.0; // Normal pitch
       
       utterance.onstart = () => setSpeakingWordId(id);
       utterance.onend = () => setSpeakingWordId(null);
