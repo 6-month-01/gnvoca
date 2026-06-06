@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ArrowLeft, Volume2, EyeOff, Search, Shuffle, Check, HelpCircle, BookOpen } from 'lucide-react';
 import type { Word } from '../types';
 
@@ -26,6 +26,43 @@ export function WordListView({
   const [isShuffle, setIsShuffle] = useState(false);
   const [hideKnown, setHideKnown] = useState(false);
   const [speakingWordId, setSpeakingWordId] = useState<string | null>(null);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>(() => {
+    return localStorage.getItem('toeic-app-tts-voice') || '';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    const updateVoices = () => {
+      const allVoices = window.speechSynthesis.getVoices();
+      // Filter for English voices
+      const en = allVoices.filter(v => v.lang.toLowerCase().startsWith('en-'));
+      setAvailableVoices(en);
+    };
+
+    updateVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+  }, []);
+
+  const handleVoiceChange = (voiceName: string) => {
+    setSelectedVoiceName(voiceName);
+    localStorage.setItem('toeic-app-tts-voice', voiceName);
+    
+    // Play a short sample
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const voice = window.speechSynthesis.getVoices().find(v => v.name === voiceName);
+      if (voice) {
+        const utterance = new SpeechSynthesisUtterance("Hello");
+        utterance.voice = voice;
+        utterance.lang = voice.lang;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
 
   // Local state to track individually revealed words when hidden
   const [individualReveals, setIndividualReveals] = useState<Record<string, { english?: boolean; korean?: boolean }>>({});
@@ -111,32 +148,38 @@ export function WordListView({
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       
-      // Select best voice (English)
-      const voices = window.speechSynthesis.getVoices();
-      const enVoices = voices.filter(v => v.lang.toLowerCase().startsWith('en-'));
-      
-      // Filter out known creepy/novelty/unnatural voices in macOS/Windows
-      const creepyVoices = ['whisper', 'zarvox', 'trinoids', 'superstar', 'jester', 'organ', 'albert', 'deranged', 'hysterical', 'bad news', 'bells', 'boing', 'bubbles', 'cellos', 'pipe organ', 'grandpa', 'grandma'];
-      const cleanEnVoices = enVoices.filter(v => 
-        !creepyVoices.some(creepy => v.name.toLowerCase().includes(creepy))
-      );
-      
-      // Sort to prioritize natural/premium/popular voices
-      const bestVoice = cleanEnVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')) ||
-                        cleanEnVoices.find(v => v.name.includes('Samantha') || v.name.includes('Apple') || v.name.includes('Ava') || v.name.includes('Zoe') || v.name.includes('Daniel') || v.name.includes('Microsoft')) ||
-                        cleanEnVoices.find(v => v.name.includes('Kathy') || v.name.includes('Karen') || v.name.includes('Ralph')) ||
-                        cleanEnVoices[0] ||
-                        enVoices[0];
-      
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-        utterance.lang = bestVoice.lang;
+      // Check if a voice was chosen by the user
+      const chosenVoice = availableVoices.find(v => v.name === selectedVoiceName);
+      if (chosenVoice) {
+        utterance.voice = chosenVoice;
+        utterance.lang = chosenVoice.lang;
       } else {
-        utterance.lang = 'en-US';
+        // Fallback to auto selection
+        const voices = window.speechSynthesis.getVoices();
+        const enVoices = voices.filter(v => v.lang.toLowerCase().startsWith('en-'));
+        
+        // Filter out known creepy/novelty/unnatural voices in macOS/Windows
+        const creepyVoices = ['whisper', 'zarvox', 'trinoids', 'superstar', 'jester', 'organ', 'albert', 'deranged', 'hysterical', 'bad news', 'bells', 'boing', 'bubbles', 'cellos', 'pipe organ', 'grandpa', 'grandma'];
+        const cleanEnVoices = enVoices.filter(v => 
+          !creepyVoices.some(creepy => v.name.toLowerCase().includes(creepy))
+        );
+        
+        const bestVoice = cleanEnVoices.find(v => v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium')) ||
+                          cleanEnVoices.find(v => v.name.includes('Samantha') || v.name.includes('Apple') || v.name.includes('Ava') || v.name.includes('Zoe') || v.name.includes('Daniel') || v.name.includes('Microsoft')) ||
+                          cleanEnVoices.find(v => v.name.includes('Kathy') || v.name.includes('Karen') || v.name.includes('Ralph')) ||
+                          cleanEnVoices[0] ||
+                          enVoices[0];
+        
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+          utterance.lang = bestVoice.lang;
+        } else {
+          utterance.lang = 'en-US';
+        }
       }
       
-      utterance.rate = 1.0; // Reset rate to 1.0 (normal speed) to prevent creepy slow voice
-      utterance.pitch = 1.0; // Normal pitch
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
       
       utterance.onstart = () => setSpeakingWordId(id);
       utterance.onend = () => setSpeakingWordId(null);
@@ -344,6 +387,25 @@ export function WordListView({
             </button>
           )}
         </div>
+        
+        {/* Voice Selector */}
+        {availableVoices.length > 0 && (
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            <span className="text-xs font-semibold text-gray-400 whitespace-nowrap">발음 목소리:</span>
+            <select
+              value={selectedVoiceName}
+              onChange={(e) => handleVoiceChange(e.target.value)}
+              className="text-xs sm:text-sm bg-gray-50 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors w-full md:w-48 cursor-pointer font-medium"
+            >
+              <option value="">기본 목소리 (자동)</option>
+              {availableVoices.map((v) => (
+                <option key={v.name} value={v.name}>
+                  {v.name.replace('Microsoft', 'MS').replace('Google', 'GG')}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Hide Mode Segmented Controls */}
         <div className="flex bg-gray-100/80 p-1 rounded-xl w-full md:w-auto">
